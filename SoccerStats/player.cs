@@ -39,10 +39,11 @@ public static List <Player>getTOpTenPlayers(List<Player> Players) {
 
         // sort the list first 
         Players.Sort(delegate (Player x, Player y) {
-            return x.PointsPerGame.CompareTo(y.PointsPerGame);
+            return y.PointsPerGame.CompareTo(x.PointsPerGame);
         });
         // returns the range 1-10
         return Players.GetRange(0, 10);
+            
     }
     }
 
