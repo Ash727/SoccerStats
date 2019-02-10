@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Net;
+using Newtonsoft.Json;
 
 namespace SoccerStats
 {
@@ -15,7 +16,8 @@ namespace SoccerStats
         public string readLink { get; set; }
         public int totalEstimatedMatches { get; set; }
         public Sort[] sort { get; set; }
-        public List<NewsResult> value { get; set; }
+        [JsonProperty(PropertyName = "value")]
+        public List<NewsResult> NewsResults { get; set; }
     }
 
     public class Sort
@@ -28,12 +30,15 @@ namespace SoccerStats
 
     public class NewsResult
     {
-        public string name { get; set; }
+        [JsonProperty(PropertyName = "name")]
+        public string HeadLine { get; set; }
         public string url { get; set; }
         public Image image { get; set; }
-        public string description { get; set; }
+        [JsonProperty(PropertyName = "description")]
+        public string Summary { get; set; }
         public About[] about { get; set; }
         public Provider[] provider { get; set; }
+        [JsonProperty(PropertyName = "datePublished")]
         public DateTime datePublished { get; set; }
         public string category { get; set; }
     }
