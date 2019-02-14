@@ -41,6 +41,7 @@ namespace SoccerStats
         [JsonProperty(PropertyName = "datePublished")]
         public DateTime datePublished { get; set; }
         public string category { get; set; }
+        public float SentimentScore { get; set; }
     }
 
     public class Image

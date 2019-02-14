@@ -25,15 +25,28 @@ namespace SoccerStats
             foreach (var player in Player.getTOpTenPlayers(players))
             {
                 List<NewsResult> newsReuslts = getNewsForPlayer(player.FirstName + " " + player.LastName);
+                SentimentResponse sentimentResponse = getSentimentREsponse(newsReuslts);
                 List<Player> topTen = Player.getTOpTenPlayers(players);
 
-                //List<NewsResult> newsReuslts = new List<NewsResult>();
-                // newsReuslts = getNewsForPlayer("dbz"); 
-                //newsReuslts = getNewsForPlayer("dbz");
-                foreach (var results in newsReuslts)
+
+                // for each sentiment repsons
+                foreach (var sentiment in sentimentResponse.sentiemnts) {
+                    foreach (var newsResult in newsReuslts) {
+                        if (newsResult.HeadLine == sentiment.id) {
+                      
+                          newsResult.SentimentScore = sentiment.score;
+                        }
+                    }
+                }
+
+                // Prests the news results for each of the news for each player
+              foreach (var results in newsReuslts)
                 {
-                    Console.Write(String.Format("Date:{0:f}, Headline:{1}, Summary: {2} \r\n", results.datePublished, results.HeadLine, results.Summary));
-                   Console.ReadKey(); // Using the enter key will move those in the list 
+                    Console.Write(String.Format("Sentiment Score:{0:P} Date:{1:f}, Headline:{2}, Summary: {3} \r\n",results.SentimentScore,results.datePublished, results.HeadLine, results.Summary));
+                    Console.WriteLine(DateTime.Now.ToString("dddd, dd MMMM yyyy tt")   
+                        );
+                    Console.WriteLine();
+                    Console.ReadKey(); // Using the enter key will move those in the list 
                 }
                // Console.WriteLine("Name:" + topTen[0].FirstName + " LastName: " + topTen[0].LastName + " Score:" + topTen[0].PointsPerGame);
             }
@@ -161,7 +174,7 @@ namespace SoccerStats
             const string accessKey = "2f1a6d364acb4a0db7e835c8cd0777d7";
             const string uriBase = "https://api.cognitive.microsoft.com/bing/v7.0/news/search";
             string searchTerm = playerName;
-            List<NewSearch> Searches;
+          //  List<NewSearch> Searches;
 
             var uriQuery = uriBase + "?q=" + Uri.EscapeDataString(searchTerm);
 
@@ -195,6 +208,8 @@ namespace SoccerStats
 
 
             byte[] searchResults = webClient.DownloadData(uriQuery);
+            //string searchResult = Encoding.UTF8.GetString(searchResults);
+            //JsonConvert.DeserializeObject<NewsResult>(searchResult);
 
 
             using (var memorStream = new MemoryStream(searchResults))
@@ -206,12 +221,51 @@ namespace SoccerStats
                 results = seralizer.Deserialize<NewSearch>(jsontextReader).NewsResults;
             }
             
-
             return results;
+        }
+
+        public static SentimentResponse getSentimentREsponse(List<NewsResult> newsResults)
+        {
+            var sentimentResponse = new SentimentResponse();
+            var sentimentRequest = new SentimentRequest();
+            // Needed or run time exception 
+            sentimentRequest.documents = new List<Document>();
             
 
-             
+            foreach (var result in newsResults) {
+                sentimentRequest
+                      .documents
+                      .Add(new Document {
+                          Id = result.HeadLine,
+                          Text = result.Summary
 
+                      });
+            }
+
+            const string accessKey = "6dfee2787cac4a9ab87d1ba313b7599b";
+            const string uriBase = "https://westus.api.cognitive.microsoft.com/text/analytics/v2.0/sentiment";
+            var results = new List<NewsResult>();
+            var webClient = new WebClient();
+            webClient.Headers.Add("Ocp-Apim-Subscription-Key", accessKey);
+            webClient.Headers.Add(HttpRequestHeader.Accept, "applicaiton/json");
+            webClient.Headers.Add(HttpRequestHeader.ContentType, "application/json");
+
+            //Seralizes the object to json for transfer 
+            string requestJson = JsonConvert.SerializeObject(sentimentRequest);
+            // Converts the the string to byte array
+            byte[] requestJson_bytearray = Encoding.UTF8.GetBytes(requestJson);
+
+            // Send upload that to the text anylitics server through http reuqes weblient 
+            byte [] response = webClient.UploadData(uriBase,requestJson_bytearray);
+            // Convert JSON response back to string 
+            string setniments = Encoding.UTF8.GetString(response);
+
+            // Convert the string back to our response object
+            sentimentResponse= JsonConvert.DeserializeObject<SentimentResponse>(setniments);
+
+            
+            
+            return sentimentResponse;
         }
 
     }
